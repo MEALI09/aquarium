@@ -1,0 +1,10 @@
+{
+  "temp_water": 24.5,
+  "temp_air": 22.0,
+  "water_leak": 0,
+  "light_on": false,
+  "feeding_time": "12:00",
+  "ph_level": 7.0,
+  "filter_on": true,
+  "water_level": "normal"
+}
