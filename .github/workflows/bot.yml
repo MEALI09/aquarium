@@ -24,8 +24,8 @@ jobs:
 
     - name: Run bot
       env:
-        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
-        DATA_FILE_PATH: ${{ secrets.DATA_FILE_PATH }}
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}  # Токен Telegram
+        GITHUB_TOKEN: ${{ secrets.TOKEN_G }}           # Токен GitHub
+        GITHUB_REPO: ${{ secrets.REPO_G }}             # Репозиторий GitHub
+        DATA_FILE_PATH: ${{ secrets.DATA_FILE_PATH }}  # Путь к файлу данных
       run: python main.py
