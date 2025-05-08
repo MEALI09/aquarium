@@ -3,335 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Aquarium Monitor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Аквариум Монитор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --primary: #3498db;
-            --secondary: #2ecc71;
             --danger: #e74c3c;
-            --warning: #f39c12;
+            --good: #2ecc71;
             --dark: #2c3e50;
-            --light: #ecf0f1;
             --bg-color: #f5f7fa;
         }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
             color: var(--dark);
-            line-height: 1.6;
+            padding: 20px;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
         }
-
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-weight: 300;
-            opacity: 0.9;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 500;
+            text-align: center;
+            margin-bottom: 20px;
             color: var(--dark);
         }
-
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
         .card-icon {
-            font-size: 1.5rem;
+            font-size: 24px;
+            margin-bottom: 10px;
             color: var(--primary);
         }
-
+        .card-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #666;
+        }
         .card-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 10px 0;
+            font-size: 20px;
+            font-weight: 500;
         }
-
-        .temp-water {
-            color: var(--primary);
-        }
-
-        .temp-air {
-            color: var(--secondary);
-        }
-
-        .water-leak {
-            color: var(--danger);
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
         .status-on {
-            background-color: var(--secondary);
+            color: var(--good);
         }
-
         .status-off {
-            background-color: var(--danger);
+            color: #666;
         }
-
-        .device-status {
-            font-size: 1.2rem;
-        }
-
-        .status-good {
-            color: var(--secondary);
-        }
-
-        .status-warning {
-            color: var(--warning);
-        }
-
-        .status-danger {
+        .status-alert {
             color: var(--danger);
         }
-
         .last-update {
-            text-align: right;
-            font-size: 0.9rem;
-            color: #7f8c8d;
+            text-align: center;
             margin-top: 20px;
+            font-size: 12px;
+            color: #999;
         }
-
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .dashboard {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Smart Aquarium Monitor</h1>
-            <p class="subtitle">Текущее состояние системы</p>
-        </header>
-
+        <h1>Мониторинг аквариума</h1>
+        
         <div class="dashboard">
+            <!-- Освещение -->
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Температура воды</span>
-                    <i class="fas fa-temperature-low card-icon"></i>
-                </div>
-                <div class="card-value temp-water" id="water-temp">24.5°C</div>
-                <div class="device-status" id="water-heater-status">Нагреватель: <span class="status-good">работает</span></div>
+                <i class="fas fa-lightbulb card-icon"></i>
+                <div class="card-title">Освещение</div>
+                <div class="card-value" id="light-status">Загрузка...</div>
             </div>
-
+            
+            <!-- Протечка воды -->
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Температура воздуха</span>
-                    <i class="fas fa-temperature-high card-icon"></i>
-                </div>
-                <div class="card-value temp-air" id="air-temp">22.0°C</div>
-                <div class="device-status" id="air-conditioner-status">Кондиционер: <span class="status-good">работает</span></div>
+                <i class="fas fa-tint card-icon"></i>
+                <div class="card-title">Протечка воды</div>
+                <div class="card-value" id="leak-status">Загрузка...</div>
             </div>
-
+            
+            <!-- Температура воды -->
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Протечка воды</span>
-                    <i class="fas fa-tint card-icon"></i>
-                </div>
-                <div class="card-value water-leak" id="water-leak">НЕТ</div>
-                <div class="device-status" id="leak-sensor-status">Датчик: <span class="status-good">активен</span></div>
+                <i class="fas fa-temperature-low card-icon"></i>
+                <div class="card-title">Температура воды</div>
+                <div class="card-value" id="water-temp">Загрузка...</div>
             </div>
-        </div>
-
-        <div class="dashboard">
+            
+            <!-- Температура воздуха -->
             <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Освещение</span>
-                    <i class="fas fa-lightbulb card-icon"></i>
-                </div>
-                <div class="card-value">
-                    <span class="status-indicator status-on"></span>
-                    <span id="light-status">Включено</span>
-                </div>
-                <div class="device-status">Таймер: <span class="status-good">активен</span></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Фильтр</span>
-                    <i class="fas fa-filter card-icon"></i>
-                </div>
-                <div class="card-value">
-                    <span class="status-indicator status-on"></span>
-                    <span id="filter-status">Работает</span>
-                </div>
-                <div class="device-status">Мощность: <span class="status-good">75%</span></div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Насос</span>
-                    <i class="fas fa-water card-icon"></i>
-                </div>
-                <div class="card-value">
-                    <span class="status-indicator status-on"></span>
-                    <span id="pump-status">Активен</span>
-                </div>
-                <div class="device-status">Производительность: <span class="status-good">60 л/ч</span></div>
+                <i class="fas fa-temperature-high card-icon"></i>
+                <div class="card-title">Температура воздуха</div>
+                <div class="card-value" id="air-temp">Загрузка...</div>
             </div>
         </div>
-
-        <div class="last-update" id="last-update">
-            Последнее обновление: <span id="update-time">только что</span>
-        </div>
+        
+        <div class="last-update" id="update-time">Обновление...</div>
     </div>
 
     <script>
-        // Имитация работы системы
-        const devices = {
-            waterHeater: { status: 'working', baseTemp: 24.5 },
-            airConditioner: { status: 'working', baseTemp: 22.0 },
-            leakSensor: { status: 'active' },
-            light: { status: 'on', timer: 'active' },
-            filter: { status: 'working', power: 75 },
-            pump: { status: 'active', flow: 60 }
+        // Начальные значения
+        let state = {
+            light: true,
+            leak: false,
+            waterTemp: 24.5,
+            airTemp: 22.0
         };
 
-        // Функция для генерации случайного отклонения
-        function getRandomFluctuation(base, range) {
-            return base + (Math.random() * range * 2 - range);
-        }
-
         // Обновление данных на странице
-        function updateData() {
-            // Температура воды с небольшими колебаниями
-            const waterTemp = getRandomFluctuation(devices.waterHeater.baseTemp, 0.3);
-            document.getElementById('water-temp').textContent = waterTemp.toFixed(1) + '°C';
-            
-            // Температура воздуха с небольшими колебаниями
-            const airTemp = getRandomFluctuation(devices.airConditioner.baseTemp, 0.5);
-            document.getElementById('air-temp').textContent = airTemp.toFixed(1) + '°C';
-            
-            // Статус оборудования
-            document.getElementById('water-heater-status').innerHTML = 
-                `Нагреватель: <span class="status-${devices.waterHeater.status === 'working' ? 'good' : 'danger'}">${
-                    devices.waterHeater.status === 'working' ? 'работает' : 'отключен'
-                }</span>`;
-            
-            document.getElementById('air-conditioner-status').innerHTML = 
-                `Кондиционер: <span class="status-${devices.airConditioner.status === 'working' ? 'good' : 'danger'}">${
-                    devices.airConditioner.status === 'working' ? 'работает' : 'отключен'
-                }</span>`;
-            
-            // Протечка (1% вероятность)
-            const leak = Math.random() < 0.01;
-            document.getElementById('water-leak').textContent = leak ? 'ДА' : 'НЕТ';
-            document.getElementById('leak-sensor-status').innerHTML = 
-                `Датчик: <span class="status-${leak ? 'danger' : 'good'}">${
-                    leak ? 'обнаружена протечка!' : 'активен'
-                }</span>`;
-            
+        function updateDisplay() {
             // Освещение
+            document.getElementById('light-status').className = 'card-value ' + 
+                (state.light ? 'status-on' : 'status-off');
             document.getElementById('light-status').textContent = 
-                devices.light.status === 'on' ? 'Включено' : 'Выключено';
+                state.light ? 'ВКЛ' : 'ВЫКЛ';
             
-            // Фильтр
-            const filterPower = getRandomFluctuation(devices.filter.power, 5);
-            document.getElementById('filter-status').textContent = 
-                devices.filter.status === 'working' ? 'Работает' : 'Отключен';
-            document.querySelector('#filter-status + .device-status').innerHTML = 
-                `Мощность: <span class="status-${
-                    filterPower > 50 ? 'good' : filterPower > 30 ? 'warning' : 'danger'
-                }">${Math.round(filterPower)}%</span>`;
+            // Протечка воды
+            document.getElementById('leak-status').className = 'card-value ' + 
+                (state.leak ? 'status-alert' : 'status-on');
+            document.getElementById('leak-status').textContent = 
+                state.leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
             
-            // Насос
-            const pumpFlow = getRandomFluctuation(devices.pump.flow, 3);
-            document.getElementById('pump-status').textContent = 
-                devices.pump.status === 'active' ? 'Активен' : 'Отключен';
-            document.querySelector('#pump-status + .device-status').innerHTML = 
-                `Производительность: <span class="status-${
-                    pumpFlow > 40 ? 'good' : pumpFlow > 20 ? 'warning' : 'danger'
-                }">${Math.round(pumpFlow)} л/ч</span>`;
+            // Температура воды
+            document.getElementById('water-temp').textContent = 
+                state.waterTemp.toFixed(1) + '°C';
+            
+            // Температура воздуха
+            document.getElementById('air-temp').textContent = 
+                state.airTemp.toFixed(1) + '°C';
             
             // Время обновления
             const now = new Date();
-            const options = {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            document.getElementById('update-time').textContent = now.toLocaleTimeString('ru-RU', options);
+            document.getElementById('update-time').textContent = 
+                'Последнее обновление: ' + now.toLocaleTimeString();
         }
 
-        // Имитация случайных событий
-        function simulateRandomEvents() {
-            // 5% вероятность изменения статуса оборудования
-            if (Math.random() < 0.05) {
-                const device = Object.keys(devices)[Math.floor(Math.random() * Object.keys(devices).length)];
-                if (devices[device].status) {
-                    devices[device].status = devices[device].status === 'working' ? 'stopped' : 'working';
-                }
+        // Имитация изменений данных
+        function simulateChanges() {
+            // Освещение (включается/выключается по расписанию)
+            const hours = new Date().getHours();
+            state.light = hours >= 8 && hours < 20; // С 8:00 до 20:00
+            
+            // Протечка (1% вероятность)
+            if (Math.random() < 0.01) {
+                state.leak = true;
+            } else if (Math.random() < 0.1) {
+                state.leak = false;
             }
+            
+            // Температура воды (колебания ±0.5°C)
+            state.waterTemp = 24.0 + Math.random() * 1.0;
+            
+            // Температура воздуха (колебания ±1.0°C)
+            state.airTemp = 21.0 + Math.random() * 2.0;
+            
+            updateDisplay();
         }
 
-        // Периодическое обновление
-        function startSimulation() {
-            updateData();
-            setInterval(() => {
-                simulateRandomEvents();
-                updateData();
-            }, 3000); // Обновление каждые 3 секунды
-        }
-
-        // Запуск при загрузке страницы
-        document.addEventListener('DOMContentLoaded', startSimulation);
+        // Запуск обновления каждые 3 секунды
+        simulateChanges();
+        setInterval(simulateChanges, 3000);
     </script>
 </body>
 </html>
