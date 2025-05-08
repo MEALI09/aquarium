@@ -11,6 +11,7 @@
             --primary: #3498db;
             --danger: #e74c3c;
             --good: #2ecc71;
+            --warning: #f39c12;
             --dark: #2c3e50;
             --bg-color: #f5f7fa;
         }
@@ -36,8 +37,9 @@
         }
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
+            margin-bottom: 20px;
         }
         .card {
             background: white;
@@ -45,6 +47,11 @@
             padding: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .card-icon {
             font-size: 24px;
@@ -59,6 +66,7 @@
         .card-value {
             font-size: 20px;
             font-weight: 500;
+            min-height: 28px;
         }
         .status-on {
             color: var(--good);
@@ -69,11 +77,18 @@
         .status-alert {
             color: var(--danger);
         }
+        .status-warning {
+            color: var(--warning);
+        }
         .last-update {
             text-align: center;
             margin-top: 20px;
             font-size: 12px;
             color: #999;
+        }
+        .loading {
+            color: var(--primary);
+            font-style: italic;
         }
         @media (max-width: 600px) {
             .dashboard {
@@ -91,96 +106,113 @@
             <div class="card">
                 <i class="fas fa-lightbulb card-icon"></i>
                 <div class="card-title">Освещение</div>
-                <div class="card-value" id="light-status">Загрузка...</div>
+                <div class="card-value" id="light-status"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Протечка воды -->
             <div class="card">
                 <i class="fas fa-tint card-icon"></i>
                 <div class="card-title">Протечка воды</div>
-                <div class="card-value" id="leak-status">Загрузка...</div>
+                <div class="card-value" id="leak-status"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Температура воды -->
             <div class="card">
                 <i class="fas fa-temperature-low card-icon"></i>
                 <div class="card-title">Температура воды</div>
-                <div class="card-value" id="water-temp">Загрузка...</div>
+                <div class="card-value" id="water-temp"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Температура воздуха -->
             <div class="card">
                 <i class="fas fa-temperature-high card-icon"></i>
                 <div class="card-title">Температура воздуха</div>
-                <div class="card-value" id="air-temp">Загрузка...</div>
+                <div class="card-value" id="air-temp"><span class="loading">загрузка...</span></div>
+            </div>
+            
+            <!-- Фильтр -->
+            <div class="card">
+                <i class="fas fa-filter card-icon"></i>
+                <div class="card-title">Фильтр</div>
+                <div class="card-value" id="filter-status"><span class="loading">загрузка...</span></div>
             </div>
         </div>
         
-        <div class="last-update" id="update-time">Обновление...</div>
+        <div class="last-update" id="update-time">Последнее обновление: <span class="loading">загрузка...</span></div>
     </div>
 
     <script>
-        // Начальные значения
-        let state = {
-            light: true,
-            leak: false,
-            waterTemp: 24.5,
-            airTemp: 22.0
-        };
+        // URL к данным на GitHub (замените на свой репозиторий)
+        const DATA_URL = 'https://github.com/MEALI09/aquarium/blob/main/data/status.json';
+        const UPDATE_INTERVAL = 5000; // 5 секунд
+        
+        // Функция для форматирования даты
+        function formatDateTime(dateString) {
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            return new Date(dateString).toLocaleString('ru-RU', options);
+        }
+
+        // Загрузка данных с GitHub
+        async function fetchData() {
+            try {
+                // Добавляем параметр запроса для избежания кеширования
+                const response = await fetch(`${DATA_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error('Ошибка загрузки данных');
+                
+                const data = await response.json();
+                updateDisplay(data);
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+                document.getElementById('update-time').innerHTML = 
+                    'Ошибка загрузки данных. Попробуйте обновить страницу.';
+            }
+        }
 
         // Обновление данных на странице
-        function updateDisplay() {
+        function updateDisplay(data) {
             // Освещение
-            document.getElementById('light-status').className = 'card-value ' + 
-                (state.light ? 'status-on' : 'status-off');
-            document.getElementById('light-status').textContent = 
-                state.light ? 'ВКЛ' : 'ВЫКЛ';
+            const lightStatus = document.getElementById('light-status');
+            lightStatus.className = 'card-value ' + (data.light_on ? 'status-on' : 'status-off');
+            lightStatus.textContent = data.light_on ? 'ВКЛ' : 'ВЫКЛ';
             
             // Протечка воды
-            document.getElementById('leak-status').className = 'card-value ' + 
-                (state.leak ? 'status-alert' : 'status-on');
-            document.getElementById('leak-status').textContent = 
-                state.leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
+            const leakStatus = document.getElementById('leak-status');
+            leakStatus.className = 'card-value ' + (data.water_leak ? 'status-alert' : 'status-on');
+            leakStatus.textContent = data.water_leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
             
             // Температура воды
             document.getElementById('water-temp').textContent = 
-                state.waterTemp.toFixed(1) + '°C';
+                data.temp_water.toFixed(1) + '°C';
             
             // Температура воздуха
             document.getElementById('air-temp').textContent = 
-                state.airTemp.toFixed(1) + '°C';
+                data.temp_air.toFixed(1) + '°C';
+            
+            // Фильтр
+            const filterStatus = document.getElementById('filter-status');
+            filterStatus.className = 'card-value ' + (data.filter_on ? 'status-on' : 'status-off');
+            filterStatus.textContent = data.filter_on ? 'РАБОТАЕТ' : 'ВЫКЛ';
             
             // Время обновления
-            const now = new Date();
-            document.getElementById('update-time').textContent = 
-                'Последнее обновление: ' + now.toLocaleTimeString();
+            document.getElementById('update-time').innerHTML = 
+                'Последнее обновление: ' + formatDateTime(data.last_update);
         }
 
-        // Имитация изменений данных
-        function simulateChanges() {
-            // Освещение (включается/выключается по расписанию)
-            const hours = new Date().getHours();
-            state.light = hours >= 8 && hours < 20; // С 8:00 до 20:00
-            
-            // Протечка (1% вероятность)
-            if (Math.random() < 0.01) {
-                state.leak = true;
-            } else if (Math.random() < 0.1) {
-                state.leak = false;
-            }
-            
-            // Температура воды (колебания ±0.5°C)
-            state.waterTemp = 24.0 + Math.random() * 1.0;
-            
-            // Температура воздуха (колебания ±1.0°C)
-            state.airTemp = 21.0 + Math.random() * 2.0;
-            
-            updateDisplay();
+        // Периодическое обновление данных
+        function startAutoRefresh() {
+            fetchData(); // Первая загрузка
+            setInterval(fetchData, UPDATE_INTERVAL);
         }
 
-        // Запуск обновления каждые 3 секунды
-        simulateChanges();
-        setInterval(simulateChanges, 3000);
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', startAutoRefresh);
     </script>
 </body>
 </html>
