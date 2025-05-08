@@ -6,6 +6,7 @@
     <title>Аквариум Монитор</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -26,7 +27,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         h1 {
@@ -36,8 +37,9 @@
         }
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
+            margin-bottom: 20px;
         }
         .card {
             background: white;
@@ -45,6 +47,11 @@
             padding: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .card-icon {
             font-size: 24px;
@@ -59,6 +66,7 @@
         .card-value {
             font-size: 20px;
             font-weight: 500;
+            min-height: 28px;
         }
         .status-on {
             color: var(--good);
@@ -69,11 +77,23 @@
         .status-alert {
             color: var(--danger);
         }
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            height: 300px;
+        }
         .last-update {
             text-align: center;
             margin-top: 20px;
             font-size: 12px;
             color: #999;
+        }
+        .loading {
+            color: var(--primary);
+            font-style: italic;
         }
         @media (max-width: 600px) {
             .dashboard {
@@ -91,96 +111,185 @@
             <div class="card">
                 <i class="fas fa-lightbulb card-icon"></i>
                 <div class="card-title">Освещение</div>
-                <div class="card-value" id="light-status">Загрузка...</div>
+                <div class="card-value" id="light-status"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Протечка воды -->
             <div class="card">
                 <i class="fas fa-tint card-icon"></i>
                 <div class="card-title">Протечка воды</div>
-                <div class="card-value" id="leak-status">Загрузка...</div>
+                <div class="card-value" id="leak-status"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Температура воды -->
             <div class="card">
                 <i class="fas fa-temperature-low card-icon"></i>
                 <div class="card-title">Температура воды</div>
-                <div class="card-value" id="water-temp">Загрузка...</div>
+                <div class="card-value" id="water-temp"><span class="loading">загрузка...</span></div>
             </div>
             
             <!-- Температура воздуха -->
             <div class="card">
                 <i class="fas fa-temperature-high card-icon"></i>
                 <div class="card-title">Температура воздуха</div>
-                <div class="card-value" id="air-temp">Загрузка...</div>
+                <div class="card-value" id="air-temp"><span class="loading">загрузка...</span></div>
             </div>
         </div>
         
-        <div class="last-update" id="update-time">Обновление...</div>
+        <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+        </div>
+        
+        <div class="last-update" id="update-time">Последнее обновление: <span class="loading">загрузка...</span></div>
     </div>
 
     <script>
-        // Начальные значения
-        let state = {
-            light: true,
-            leak: false,
-            waterTemp: 24.5,
-            airTemp: 22.0
+        // Примерные данные (в реальном проекте замените на загрузку из GitHub)
+        let aquariumData = {
+            temp_water: 24.5,
+            temp_air: 22.0,
+            water_leak: false,
+            light_on: true,
+            last_update: new Date().toISOString()
         };
 
+        // История температур для графика
+        let tempHistory = {
+            water: [],
+            air: [],
+            labels: []
+        };
+
+        // Инициализация графика
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const tempChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Температура воды (°C)',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Температура воздуха (°C)',
+                        data: [],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        suggestedMin: 20,
+                        suggestedMax: 30
+                    }
+                }
+            }
+        });
+
         // Обновление данных на странице
-        function updateDisplay() {
+        function updateDisplay(data) {
             // Освещение
-            document.getElementById('light-status').className = 'card-value ' + 
-                (state.light ? 'status-on' : 'status-off');
-            document.getElementById('light-status').textContent = 
-                state.light ? 'ВКЛ' : 'ВЫКЛ';
+            const lightStatus = document.getElementById('light-status');
+            lightStatus.className = 'card-value ' + (data.light_on ? 'status-on' : 'status-off');
+            lightStatus.textContent = data.light_on ? 'ВКЛ' : 'ВЫКЛ';
             
             // Протечка воды
-            document.getElementById('leak-status').className = 'card-value ' + 
-                (state.leak ? 'status-alert' : 'status-on');
-            document.getElementById('leak-status').textContent = 
-                state.leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
+            const leakStatus = document.getElementById('leak-status');
+            leakStatus.className = 'card-value ' + (data.water_leak ? 'status-alert' : 'status-on');
+            leakStatus.textContent = data.water_leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
             
             // Температура воды
-            document.getElementById('water-temp').textContent = 
-                state.waterTemp.toFixed(1) + '°C';
+            document.getElementById('water-temp').textContent = data.temp_water.toFixed(1) + '°C';
             
             // Температура воздуха
-            document.getElementById('air-temp').textContent = 
-                state.airTemp.toFixed(1) + '°C';
+            document.getElementById('air-temp').textContent = data.temp_air.toFixed(1) + '°C';
             
             // Время обновления
-            const now = new Date();
+            const options = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            };
             document.getElementById('update-time').textContent = 
-                'Последнее обновление: ' + now.toLocaleTimeString();
+                'Последнее обновление: ' + new Date(data.last_update).toLocaleString('ru-RU', options);
+            
+            // Добавляем данные в график
+            addToChart(data.temp_water, data.temp_air);
         }
 
-        // Имитация изменений данных
-        function simulateChanges() {
-            // Освещение (включается/выключается по расписанию)
-            const hours = new Date().getHours();
-            state.light = hours >= 8 && hours < 20; // С 8:00 до 20:00
+        // Добавление данных в график
+        function addToChart(waterTemp, airTemp) {
+            const now = new Date();
+            const timeLabel = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
             
-            // Протечка (1% вероятность)
-            if (Math.random() < 0.01) {
-                state.leak = true;
-            } else if (Math.random() < 0.1) {
-                state.leak = false;
+            tempHistory.water.push(waterTemp);
+            tempHistory.air.push(airTemp);
+            tempHistory.labels.push(timeLabel);
+            
+            // Ограничиваем историю 20 последними значениями
+            if (tempHistory.water.length > 20) {
+                tempHistory.water.shift();
+                tempHistory.air.shift();
+                tempHistory.labels.shift();
             }
             
-            // Температура воды (колебания ±0.5°C)
-            state.waterTemp = 24.0 + Math.random() * 1.0;
-            
-            // Температура воздуха (колебания ±1.0°C)
-            state.airTemp = 21.0 + Math.random() * 2.0;
-            
-            updateDisplay();
+            // Обновляем график
+            tempChart.data.labels = tempHistory.labels;
+            tempChart.data.datasets[0].data = tempHistory.water;
+            tempChart.data.datasets[1].data = tempHistory.air;
+            tempChart.update();
         }
 
-        // Запуск обновления каждые 3 секунды
-        simulateChanges();
-        setInterval(simulateChanges, 3000);
+        // Имитация изменений данных (в реальном проекте замените на загрузку из GitHub)
+        function simulateData() {
+            // Небольшие случайные колебания температуры
+            aquariumData.temp_water = 24.0 + Math.random() * 1.5;
+            aquariumData.temp_air = 21.0 + Math.random() * 2.0;
+            
+            // 1% вероятность протечки
+            if (Math.random() < 0.01) {
+                aquariumData.water_leak = true;
+            } else if (Math.random() < 0.1) {
+                aquariumData.water_leak = false;
+            }
+            
+            // Освещение по времени суток
+            const hours = new Date().getHours();
+            aquariumData.light_on = hours >= 8 && hours < 20;
+            
+            aquariumData.last_update = new Date().toISOString();
+            
+            updateDisplay(aquariumData);
+        }
+
+        // Запуск обновления данных
+        function startMonitoring() {
+            simulateData(); // Первое обновление
+            setInterval(simulateData, 5000); // Обновление каждые 5 секунд
+            
+            // Инициализация графика начальными данными
+            for (let i = 0; i < 10; i++) {
+                addToChart(24.0 + Math.random() * 1.0, 22.0 + Math.random() * 1.5);
+            }
+        }
+
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', startMonitoring);
     </script>
 </body>
 </html>
