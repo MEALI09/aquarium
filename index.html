@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аквариум Монитор</title>
+    <title>Умный аквариум - Панель управления</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #3498db;
             --danger: #e74c3c;
             --good: #2ecc71;
-            --warning: #f39c12;
             --dark: #2c3e50;
             --bg-color: #f5f7fa;
         }
@@ -27,7 +27,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         h1 {
@@ -37,7 +37,7 @@
         }
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -77,8 +77,44 @@
         .status-alert {
             color: var(--danger);
         }
-        .status-warning {
-            color: var(--warning);
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            height: 300px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .control-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .light-btn {
+            background-color: #f39c12;
+            color: white;
+        }
+        .leak-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .temp-btn {
+            background-color: #3498db;
+            color: white;
         }
         .last-update {
             text-align: center;
@@ -94,86 +130,125 @@
             .dashboard {
                 grid-template-columns: 1fr 1fr;
             }
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .control-btn {
+                width: 100%;
+                max-width: 200px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Мониторинг аквариума</h1>
-        
+        <h1>Умный аквариум - Панель управления</h1>
+
         <div class="dashboard">
-            <!-- Освещение -->
             <div class="card">
                 <i class="fas fa-lightbulb card-icon"></i>
                 <div class="card-title">Освещение</div>
-                <div class="card-value" id="light-status"><span class="loading">загрузка...</span></div>
+                <div class="card-value status-off" id="light-status">ВЫКЛ</div>
             </div>
-            
-            <!-- Протечка воды -->
+
             <div class="card">
                 <i class="fas fa-tint card-icon"></i>
                 <div class="card-title">Протечка воды</div>
-                <div class="card-value" id="leak-status"><span class="loading">загрузка...</span></div>
+                <div class="card-value status-on" id="leak-status">НЕТ</div>
             </div>
-            
-            <!-- Температура воды -->
+
             <div class="card">
                 <i class="fas fa-temperature-low card-icon"></i>
                 <div class="card-title">Температура воды</div>
-                <div class="card-value" id="water-temp"><span class="loading">загрузка...</span></div>
+                <div class="card-value" id="water-temp">24.5°C</div>
             </div>
-            
-            <!-- Температура воздуха -->
+
             <div class="card">
                 <i class="fas fa-temperature-high card-icon"></i>
                 <div class="card-title">Температура воздуха</div>
-                <div class="card-value" id="air-temp"><span class="loading">загрузка...</span></div>
-            </div>
-            
-            <!-- Фильтр -->
-            <div class="card">
-                <i class="fas fa-filter card-icon"></i>
-                <div class="card-title">Фильтр</div>
-                <div class="card-value" id="filter-status"><span class="loading">загрузка...</span></div>
+                <div class="card-value" id="air-temp">22.0°C</div>
             </div>
         </div>
+
+        <div class="chart-container">
+            <canvas id="tempChart"></canvas>
+        </div>
+
+        <div class="last-update" id="update-time">Последнее обновление: загрузка...</div>
         
-        <div class="last-update" id="update-time">Последнее обновление: <span class="loading">загрузка...</span></div>
+        <div class="controls">
+            <button id="toggle-light" class="control-btn light-btn">
+                <i class="fas fa-lightbulb"></i> Переключить свет
+            </button>
+            <button id="toggle-leak" class="control-btn leak-btn">
+                <i class="fas fa-tint"></i> Переключить протечку
+            </button>
+            <button id="water-inc" class="control-btn temp-btn">
+                <i class="fas fa-temperature-up"></i> Вода +0.5°C
+            </button>
+            <button id="water-dec" class="control-btn temp-btn">
+                <i class="fas fa-temperature-down"></i> Вода -0.5°C
+            </button>
+        </div>
     </div>
 
     <script>
-        // URL к данным на GitHub (замените на свой репозиторий)
-        const DATA_URL = 'https://github.com/MEALI09/aquarium/blob/main/data/status.json';
-        const UPDATE_INTERVAL = 5000; // 5 секунд
+        // Базовый URL API (замените на ваш URL Vercel)
+        const API_BASE_URL = 'https://your-vercel-app.vercel.app/api';
         
-        // Функция для форматирования даты
-        function formatDateTime(dateString) {
-            const options = { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            };
-            return new Date(dateString).toLocaleString('ru-RU', options);
-        }
-
-        // Загрузка данных с GitHub
-        async function fetchData() {
-            try {
-                // Добавляем параметр запроса для избежания кеширования
-                const response = await fetch(`${DATA_URL}?t=${Date.now()}`);
-                if (!response.ok) throw new Error('Ошибка загрузки данных');
-                
-                const data = await response.json();
-                updateDisplay(data);
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-                document.getElementById('update-time').innerHTML = 
-                    'Ошибка загрузки данных. Попробуйте обновить страницу.';
+        // Инициализация графика
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const tempChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Температура воды (°C)',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Температура воздуха (°C)',
+                        data: [],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 20,
+                        max: 28,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
             }
-        }
+        });
 
         // Обновление данных на странице
         function updateDisplay(data) {
@@ -181,38 +256,134 @@
             const lightStatus = document.getElementById('light-status');
             lightStatus.className = 'card-value ' + (data.light_on ? 'status-on' : 'status-off');
             lightStatus.textContent = data.light_on ? 'ВКЛ' : 'ВЫКЛ';
-            
+
             // Протечка воды
             const leakStatus = document.getElementById('leak-status');
             leakStatus.className = 'card-value ' + (data.water_leak ? 'status-alert' : 'status-on');
             leakStatus.textContent = data.water_leak ? 'ОБНАРУЖЕНО' : 'НЕТ';
-            
+
             // Температура воды
-            document.getElementById('water-temp').textContent = 
-                data.temp_water.toFixed(1) + '°C';
-            
+            document.getElementById('water-temp').textContent = data.temp_water.toFixed(1) + '°C';
+
             // Температура воздуха
-            document.getElementById('air-temp').textContent = 
-                data.temp_air.toFixed(1) + '°C';
-            
-            // Фильтр
-            const filterStatus = document.getElementById('filter-status');
-            filterStatus.className = 'card-value ' + (data.filter_on ? 'status-on' : 'status-off');
-            filterStatus.textContent = data.filter_on ? 'РАБОТАЕТ' : 'ВЫКЛ';
-            
+            document.getElementById('air-temp').textContent = data.temp_air.toFixed(1) + '°C';
+
             // Время обновления
-            document.getElementById('update-time').innerHTML = 
-                'Последнее обновление: ' + formatDateTime(data.last_update);
+            const options = { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            };
+            document.getElementById('update-time').textContent = 
+                'Последнее обновление: ' + new Date(data.last_update).toLocaleString('ru-RU', options);
         }
 
-        // Периодическое обновление данных
-        function startAutoRefresh() {
-            fetchData(); // Первая загрузка
-            setInterval(fetchData, UPDATE_INTERVAL);
+        // Добавление данных в график
+        function addToChart(waterTemp, airTemp, timestamp) {
+            const date = new Date(timestamp);
+            const timeLabel = date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+
+            tempChart.data.labels.push(timeLabel);
+            tempChart.data.datasets[0].data.push(waterTemp);
+            tempChart.data.datasets[1].data.push(airTemp);
+
+            // Ограничиваем историю 20 последними значениями
+            if (tempChart.data.labels.length > 20) {
+                tempChart.data.labels.shift();
+                tempChart.data.datasets[0].data.shift();
+                tempChart.data.datasets[1].data.shift();
+            }
+
+            tempChart.update();
         }
+
+        // Загрузка данных с сервера
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/status`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                return await response.json();
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+
+        // Загрузка истории
+        async function fetchHistory() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/history`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                return await response.json();
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+
+        // Отправка команды на сервер
+        async function sendCommand(endpoint, method = 'POST') {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, { method });
+                if (!response.ok) throw new Error('Ошибка команды');
+                return await response.json();
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+
+        // Запуск мониторинга
+        async function startMonitoring() {
+            // Загрузка текущего состояния
+            const data = await fetchData();
+            if (data) updateDisplay(data);
+
+            // Загрузка истории
+            const history = await fetchHistory();
+            if (history) {
+                tempChart.data.labels = history.labels;
+                tempChart.data.datasets[0].data = history.water;
+                tempChart.data.datasets[1].data = history.air;
+                tempChart.update();
+            }
+
+            // Обновление каждые 5 секунд
+            setInterval(async () => {
+                const newData = await fetchData();
+                if (newData) {
+                    updateDisplay(newData);
+                    addToChart(newData.temp_water, newData.temp_air, newData.last_update);
+                }
+            }, 5000);
+        }
+
+        // Обработчики кнопок
+        document.getElementById('toggle-light').addEventListener('click', async () => {
+            await sendCommand('/light/toggle');
+            updateDisplay(await fetchData());
+        });
+
+        document.getElementById('toggle-leak').addEventListener('click', async () => {
+            await sendCommand('/leak/toggle');
+            updateDisplay(await fetchData());
+        });
+
+        document.getElementById('water-inc').addEventListener('click', async () => {
+            await sendCommand('/water/increase');
+            updateDisplay(await fetchData());
+        });
+
+        document.getElementById('water-dec').addEventListener('click', async () => {
+            await sendCommand('/water/decrease');
+            updateDisplay(await fetchData());
+        });
 
         // Запуск при загрузке страницы
-        document.addEventListener('DOMContentLoaded', startAutoRefresh);
+        document.addEventListener('DOMContentLoaded', startMonitoring);
     </script>
 </body>
 </html>
