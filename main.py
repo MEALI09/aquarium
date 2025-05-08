@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 SET_TEMP_WATER, SET_TEMP_AIR, SET_WATER_LEAK = range(3)
 
 # Получение конфигурации из переменных окружения
-TELEGRAM_TOKEN = os.getenv('8043812984:AAFQETHe5mKggpk16USb3NhP9QRpHRMxj9g')
+TELEGRAM_TOKEN = os.getenv('Your_Token')
 WEBSITE_URL = os.getenv('WEBSITE_URL', 'https://meali09.github.io/aquarium/')
-GITHUB_TOKEN = os.getenv('94241a40b28394eba0936e9e88059a3131ada20a')
+GITHUB_TOKEN = os.getenv('Your_Token')
 GITHUB_REPO = os.getenv('GITHUB_REPO', 'meali09/aquarium')
 DATA_FILE_PATH = os.getenv('DATA_FILE_PATH', 'data/status.json')
 
