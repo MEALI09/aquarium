@@ -124,44 +124,20 @@
             background-color: var(--danger);
         }
 
-        .telegram-section {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .telegram-title {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-
-        .telegram-description {
-            margin-bottom: 20px;
-        }
-
-        .telegram-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background-color: #0088cc;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-
-        .telegram-btn:hover {
-            background-color: #0077b5;
-        }
-
-        .telegram-icon {
+        .device-status {
             font-size: 1.2rem;
+        }
+
+        .status-good {
+            color: var(--secondary);
+        }
+
+        .status-warning {
+            color: var(--warning);
+        }
+
+        .status-danger {
+            color: var(--danger);
         }
 
         .last-update {
@@ -169,20 +145,6 @@
             font-size: 0.9rem;
             color: #7f8c8d;
             margin-top: 20px;
-        }
-
-        .loading {
-            color: var(--primary);
-            font-style: italic;
-        }
-
-        .info-note {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffeeba;
         }
 
         @media (max-width: 768px) {
@@ -196,12 +158,8 @@
     <div class="container">
         <header>
             <h1>Smart Aquarium Monitor</h1>
-            <p class="subtitle">Мониторинг вашего умного аквариума</p>
+            <p class="subtitle">Текущее состояние системы</p>
         </header>
-
-        <div class="info-note">
-            <i class="fas fa-info-circle"></i> Для изменения параметров используйте Telegram бота (ссылка ниже)
-        </div>
 
         <div class="dashboard">
             <div class="card">
@@ -209,7 +167,8 @@
                     <span class="card-title">Температура воды</span>
                     <i class="fas fa-temperature-low card-icon"></i>
                 </div>
-                <div class="card-value temp-water" id="water-temp"><span class="loading">загрузка...</span></div>
+                <div class="card-value temp-water" id="water-temp">24.5°C</div>
+                <div class="device-status" id="water-heater-status">Нагреватель: <span class="status-good">работает</span></div>
             </div>
 
             <div class="card">
@@ -217,7 +176,8 @@
                     <span class="card-title">Температура воздуха</span>
                     <i class="fas fa-temperature-high card-icon"></i>
                 </div>
-                <div class="card-value temp-air" id="air-temp"><span class="loading">загрузка...</span></div>
+                <div class="card-value temp-air" id="air-temp">22.0°C</div>
+                <div class="device-status" id="air-conditioner-status">Кондиционер: <span class="status-good">работает</span></div>
             </div>
 
             <div class="card">
@@ -225,7 +185,8 @@
                     <span class="card-title">Протечка воды</span>
                     <i class="fas fa-tint card-icon"></i>
                 </div>
-                <div class="card-value water-leak" id="water-leak"><span class="loading">загрузка...</span></div>
+                <div class="card-value water-leak" id="water-leak">НЕТ</div>
+                <div class="device-status" id="leak-sensor-status">Датчик: <span class="status-good">активен</span></div>
             </div>
         </div>
 
@@ -235,7 +196,11 @@
                     <span class="card-title">Освещение</span>
                     <i class="fas fa-lightbulb card-icon"></i>
                 </div>
-                <div class="card-value" id="light-status"><span class="loading">загрузка...</span></div>
+                <div class="card-value">
+                    <span class="status-indicator status-on"></span>
+                    <span id="light-status">Включено</span>
+                </div>
+                <div class="device-status">Таймер: <span class="status-good">активен</span></div>
             </div>
 
             <div class="card">
@@ -243,133 +208,130 @@
                     <span class="card-title">Фильтр</span>
                     <i class="fas fa-filter card-icon"></i>
                 </div>
-                <div class="card-value" id="filter-status"><span class="loading">загрузка...</span></div>
+                <div class="card-value">
+                    <span class="status-indicator status-on"></span>
+                    <span id="filter-status">Работает</span>
+                </div>
+                <div class="device-status">Мощность: <span class="status-good">75%</span></div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Уровень воды</span>
+                    <span class="card-title">Насос</span>
                     <i class="fas fa-water card-icon"></i>
                 </div>
-                <div class="card-value" id="water-level"><span class="loading">загрузка...</span></div>
+                <div class="card-value">
+                    <span class="status-indicator status-on"></span>
+                    <span id="pump-status">Активен</span>
+                </div>
+                <div class="device-status">Производительность: <span class="status-good">60 л/ч</span></div>
             </div>
         </div>
 
-        <div class="telegram-section">
-            <h2 class="telegram-title">Управление через Telegram</h2>
-            <p class="telegram-description">Для изменения параметров аквариума используйте нашего Telegram бота:</p>
-            <a href="https://t.me/YourAquariumBot" class="telegram-btn" target="_blank">
-                <i class="fab fa-telegram telegram-icon"></i>
-                Smart Aquarium Bot
-            </a>
-        </div>
-
         <div class="last-update" id="last-update">
-            Последнее обновление: <span class="loading">загружается...</span>
+            Последнее обновление: <span id="update-time">только что</span>
         </div>
     </div>
 
     <script>
-        // Конфигурация
-        const DATA_URL = 'https://raw.githubusercontent.com/meali09/aquarium/main/data/status.json';
-        const UPDATE_INTERVAL = 5000; // 5 секунд
-
-        // Данные аквариума
-        let aquariumData = {
-            temp_water: null,
-            temp_air: null,
-            water_leak: null,
-            light_on: null,
-            filter_on: null,
-            water_level: null,
-            last_update: null
+        // Имитация работы системы
+        const devices = {
+            waterHeater: { status: 'working', baseTemp: 24.5 },
+            airConditioner: { status: 'working', baseTemp: 22.0 },
+            leakSensor: { status: 'active' },
+            light: { status: 'on', timer: 'active' },
+            filter: { status: 'working', power: 75 },
+            pump: { status: 'active', flow: 60 }
         };
 
-        // Загрузка данных с GitHub
-        async function fetchData() {
-            try {
-                // Добавляем параметр запроса для избежания кеширования
-                const response = await fetch(`${DATA_URL}?t=${Date.now()}`);
-                if (!response.ok) throw new Error('Ошибка загрузки данных');
-
-                const data = await response.json();
-                aquariumData = {
-                    temp_water: parseFloat(data.temp_water),
-                    temp_air: parseFloat(data.temp_air),
-                    water_leak: Boolean(data.water_leak),
-                    light_on: Boolean(data.light_on),
-                    filter_on: Boolean(data.filter_on),
-                    water_level: data.water_level || 'normal',
-                    last_update: new Date(data.last_update)
-                };
-
-                updateDisplay();
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-                document.getElementById('last-update').innerHTML =
-                    'Ошибка загрузки данных. Попробуйте обновить страницу.';
-            }
+        // Функция для генерации случайного отклонения
+        function getRandomFluctuation(base, range) {
+            return base + (Math.random() * range * 2 - range);
         }
 
         // Обновление данных на странице
-        function updateDisplay() {
-            // Основные параметры
-            document.getElementById('water-temp').textContent = aquariumData.temp_water !== null ?
-                aquariumData.temp_water.toFixed(1) + '°C' : '--';
-
-            document.getElementById('air-temp').textContent = aquariumData.temp_air !== null ?
-                aquariumData.temp_air.toFixed(1) + '°C' : '--';
-
-            document.getElementById('water-leak').textContent = aquariumData.water_leak !== null ?
-                (aquariumData.water_leak ? 'ДА' : 'НЕТ') : '--';
-
+        function updateData() {
+            // Температура воды с небольшими колебаниями
+            const waterTemp = getRandomFluctuation(devices.waterHeater.baseTemp, 0.3);
+            document.getElementById('water-temp').textContent = waterTemp.toFixed(1) + '°C';
+            
+            // Температура воздуха с небольшими колебаниями
+            const airTemp = getRandomFluctuation(devices.airConditioner.baseTemp, 0.5);
+            document.getElementById('air-temp').textContent = airTemp.toFixed(1) + '°C';
+            
+            // Статус оборудования
+            document.getElementById('water-heater-status').innerHTML = 
+                `Нагреватель: <span class="status-${devices.waterHeater.status === 'working' ? 'good' : 'danger'}">${
+                    devices.waterHeater.status === 'working' ? 'работает' : 'отключен'
+                }</span>`;
+            
+            document.getElementById('air-conditioner-status').innerHTML = 
+                `Кондиционер: <span class="status-${devices.airConditioner.status === 'working' ? 'good' : 'danger'}">${
+                    devices.airConditioner.status === 'working' ? 'работает' : 'отключен'
+                }</span>`;
+            
+            // Протечка (1% вероятность)
+            const leak = Math.random() < 0.01;
+            document.getElementById('water-leak').textContent = leak ? 'ДА' : 'НЕТ';
+            document.getElementById('leak-sensor-status').innerHTML = 
+                `Датчик: <span class="status-${leak ? 'danger' : 'good'}">${
+                    leak ? 'обнаружена протечка!' : 'активен'
+                }</span>`;
+            
             // Освещение
-            if (aquariumData.light_on !== null) {
-                document.getElementById('light-status').innerHTML =
-                    `<span class="status-indicator ${aquariumData.light_on ? 'status-on' : 'status-off'}"></span>
-                    ${aquariumData.light_on ? 'Включено' : 'Выключено'}`;
-            }
-
+            document.getElementById('light-status').textContent = 
+                devices.light.status === 'on' ? 'Включено' : 'Выключено';
+            
             // Фильтр
-            if (aquariumData.filter_on !== null) {
-                document.getElementById('filter-status').innerHTML =
-                    `<span class="status-indicator ${aquariumData.filter_on ? 'status-on' : 'status-off'}"></span>
-                    ${aquariumData.filter_on ? 'Работает' : 'Выключен'}`;
-            }
+            const filterPower = getRandomFluctuation(devices.filter.power, 5);
+            document.getElementById('filter-status').textContent = 
+                devices.filter.status === 'working' ? 'Работает' : 'Отключен';
+            document.querySelector('#filter-status + .device-status').innerHTML = 
+                `Мощность: <span class="status-${
+                    filterPower > 50 ? 'good' : filterPower > 30 ? 'warning' : 'danger'
+                }">${Math.round(filterPower)}%</span>`;
+            
+            // Насос
+            const pumpFlow = getRandomFluctuation(devices.pump.flow, 3);
+            document.getElementById('pump-status').textContent = 
+                devices.pump.status === 'active' ? 'Активен' : 'Отключен';
+            document.querySelector('#pump-status + .device-status').innerHTML = 
+                `Производительность: <span class="status-${
+                    pumpFlow > 40 ? 'good' : pumpFlow > 20 ? 'warning' : 'danger'
+                }">${Math.round(pumpFlow)} л/ч</span>`;
+            
+            // Время обновления
+            const now = new Date();
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('update-time').textContent = now.toLocaleTimeString('ru-RU', options);
+        }
 
-            // Уровень воды
-            if (aquariumData.water_level) {
-                const levels = {
-                    'low': 'Низкий',
-                    'normal': 'Нормальный',
-                    'high': 'Высокий'
-                };
-                document.getElementById('water-level').textContent = levels[aquariumData.water_level] || aquariumData.water_level;
-            }
-
-            // Время последнего обновления
-            if (aquariumData.last_update) {
-                const options = {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                };
-                document.getElementById('last-update').innerHTML =
-                    'Последнее обновление: ' + aquariumData.last_update.toLocaleString('ru-RU', options);
+        // Имитация случайных событий
+        function simulateRandomEvents() {
+            // 5% вероятность изменения статуса оборудования
+            if (Math.random() < 0.05) {
+                const device = Object.keys(devices)[Math.floor(Math.random() * Object.keys(devices).length)];
+                if (devices[device].status) {
+                    devices[device].status = devices[device].status === 'working' ? 'stopped' : 'working';
+                }
             }
         }
 
-        // Периодическое обновление данных
-        function startAutoRefresh() {
-            fetchData(); // Первая загрузка
-            setInterval(fetchData, UPDATE_INTERVAL);
+        // Периодическое обновление
+        function startSimulation() {
+            updateData();
+            setInterval(() => {
+                simulateRandomEvents();
+                updateData();
+            }, 3000); // Обновление каждые 3 секунды
         }
 
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', startAutoRefresh);
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', startSimulation);
     </script>
 </body>
 </html>
